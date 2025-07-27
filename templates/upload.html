@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}{{ '?token='+request.args.get('token') if request.args.get('token') else '' }}" >
+    <title>File Upload</title>
+</head>
+<body>
+    <h1>Upload a File</h1>
+    <form id="uploadform" method="post">
+        <label for="folder">Select Directory:</label>
+        <input type="text" list="folderlist" id="folder" name="folder" value="">
+        <datalist id="folderlist">
+            <option value=""></option>
+        </datalist>
+        <button type="button" onclick="updateUI()">Refresh directory</button>
+        <br>
+        <input type="file" id="fileInput" multiple required>
+        <button type="submit">Upload to this directory</button>
+        Resume mode: <input type="checkbox" id="resume">
+        <br>
+        Zip this directory: <a id="zip">Download zip</a>
+    </form>
+    <div id="progress-container" style="display:none;">
+        <progress id="progress-bar" value="0" max="100"></progress>
+        <span id="progress-text"></span>
+    </div>
+    <h2>Available Files</h2>
+    <div id="file-list"></div>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}{{ '?token='+request.args.get('token') if request.args.get('token') else '' }}"></script>
+</body>
+</html>
+

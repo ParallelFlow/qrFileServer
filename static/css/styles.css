@@ -1,0 +1,53 @@
+details.file-tree {
+    margin-left: 1em;
+    color: rgb(191, 214, 255);
+    padding: 0px;
+}
+
+summary.file-tree {
+    color: rgb(191, 214, 255);
+    cursor: pointer;
+}
+
+.file {
+    color: rgb(152, 251, 152);
+    display: block;
+    text-decoration: none;
+    margin-left: 1em;
+}
+
+.file-tree, .file {
+    border-style: solid;
+    border-width: thin;
+    padding: 5px;
+}
+
+a:hover.file, a:hover.edit, summary:hover.file-tree {
+    text-decoration: underline;
+}
+
+#zip {
+  color: rgb(152, 251, 152);
+}
+
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background: #000000;
+    color: #ffffff;
+}
+
+h1, h2 {
+    color: #ffffff;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+select, input[type="file"], button {
+    margin-top: 10px;
+    padding: 10px;
+}
+
+
