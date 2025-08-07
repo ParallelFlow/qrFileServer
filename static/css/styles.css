@@ -1,35 +1,3 @@
-details.file-tree {
-    margin-left: 1em;
-    color: rgb(191, 214, 255);
-    padding: 0px;
-}
-
-summary.file-tree {
-    color: rgb(191, 214, 255);
-    cursor: pointer;
-}
-
-.file {
-    color: rgb(152, 251, 152);
-    display: block;
-    text-decoration: none;
-    margin-left: 1em;
-}
-
-.file-tree, .file {
-    border-style: solid;
-    border-width: thin;
-    padding: 5px;
-}
-
-a:hover.file, a:hover.edit, summary:hover.file-tree {
-    text-decoration: underline;
-}
-
-#zip {
-  color: rgb(152, 251, 152);
-}
-
 body {
     font-family: sans-serif;
     margin: 20px;
@@ -45,9 +13,167 @@ form {
     margin-bottom: 20px;
 }
 
+button {
+    border-style: solid;
+    border-width: thin;
+    border-color: #ffffff;
+    cursor: pointer;
+    background-color: #0b5bed;
+    color: #ffffff;
+}
+
+button:hover {
+    background-color: #0846b4;
+}
+
 select, input[type="file"], button {
     margin-top: 10px;
     padding: 10px;
 }
 
+#selected-folder {
+    width: 50%;
+}
 
+
+
+
+
+
+.folder-container {
+    padding: 0px;
+    color: #bfd6ff;
+}
+
+/* each folder */
+details.folder-container {
+    margin-left: 1em;
+    display: block;
+    list-style-type: none;
+}
+
+/* folder 'header text' aka folder name*/
+summary.folder-container {
+    padding: 5px;
+    cursor: pointer;
+    margin: 0px;
+    display: block;
+}
+
+
+/* annoying apple stuff. use a custom open and close arrows instead*/
+summary.folder-container::-webkit-details-marker {
+    display: none;
+}
+/* custom open and close symbol */
+details.folder-container > summary.folder-container::before {
+    content: '+ ';
+}
+details.folder-container[open] > summary.folder-container::before {
+    content: '- ';
+}
+
+
+
+
+
+
+
+
+
+
+/* container for everthing in file entry */
+.file-container {
+    color: #98fb98;
+    text-decoration: none;
+    display: block;
+}
+
+
+/* folder entry container */
+div.file-container {
+    margin-left: 1em;
+    padding: 5px;
+    display: block;
+}
+
+/* file name */
+a.file-container {
+    display: inline-block;
+}
+
+
+
+.border {
+    border-style: solid;
+    border-width: thin;
+}
+
+
+
+
+a:hover.file-container, p:hover.folder-container {
+    text-decoration: underline;
+}
+
+
+button.folder-container, button.file-container {
+    color: #ffffff;
+    float: right;
+    padding: 0px;
+    margin: 0px;
+    margin-left: 5px;
+    text-align: center;
+}
+
+
+
+#zip {
+    color: rgb(152, 251, 152);
+}
+
+.overlay {
+    position: fixed;
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.editor {
+    width: 90%;
+    height: 80%;
+    font-size: 16px;
+    color: white;
+    background-color: #000000;
+    padding: 10px;
+    border-style: solid;
+    border-width: thin;
+}
+
+
+
+.UI-container {
+    width: 90%;
+    background: #000000;
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.UI-input {
+    width:50%;
+    font-size: 12px;
+}
+
+
+
+.UI-button {
+    margin-left: 5px;
+}

@@ -93,15 +93,15 @@ def secure_folderpath(root, user_input_folder):
 @app.before_request
 def before_every_request():
     """Authentication and logging before each request"""
-    if READONLY and request.path == "/upload":
-        return "This site is in read only mode", 405
+    readonlyAPI = {'/upload', '/delete', '/move', '/newfile', '/newfolder'}
+    if READONLY and request.path in readonlyAPI:
+        return {'message': 'This site is in read only mode'}, 405
 
     if authenticate(): return authenticate()
 
 @app.route('/')
 def index():
     """Display website and ensure the upload folder is updated."""
-    # update_folder()
     return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
@@ -109,40 +109,40 @@ def upload_file():
     """Handle file upload by writing each chunk of data on each request."""
 
     #here is some heavy input validation
-    folder = request.form.get('folder','')
+    folder = os.path.normpath(request.form.get('folder',''))
     if not isinstance(folder, str):
-        return 'Invalid folder', 400
+        return {'message': 'Invalid folder'}, 400
 
     if 'file' not in request.files and not request.file.name:
-        return 'No file part', 400
+        return {'message': 'No file part'}, 400
     file = request.files['file']
 
     filename = file.filename
     if not isinstance(filename, str):
-        return 'Invalid file name', 400
+        return {'message': 'Invalid file name'}, 400
 
     file_content = file.read()
     chunk_size = len(file_content)
     if chunk_size == 0:
-        return 'Empty file', 400
+        return {'message': 'Empty file'}, 400
 
     chunk_index = 0
     try:
         chunk_index = int(request.form.get('chunk'))
     except (ValueError, TypeError):
-        return 'Invalid chunk index', 400
+        return {'message': 'Invalid chunk index'}, 400
 
     file_size = 0
     try:
         file_size = int(request.form.get('fileSize'))
         if file_size <= 0:
-            return 'Empty file', 400
+            return {'message': 'Empty file'}, 400
     except (ValueError, TypeError):
-        return 'Invalid file size', 400
+        return {'message': 'Invalid file size'}, 400
 
     resume = request.form.get('resume','false')
     if not isinstance(resume, str):
-        return 'Invalid resume option', 400
+        return {'message': 'Invalid resume option'}, 400
 
     total_chunks = math.ceil(file_size/EXPECTED_CHUNK_SIZE)
 
@@ -202,13 +202,13 @@ def download_file(inputPath):
 @app.route('/zip/<path:inputPath>', methods=['GET'])
 def download_zip(inputPath):
     """Download an entire directory by downloading a zip file on the fly"""
-    folder_path = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER,inputPath))
+    folder_path = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER,os.path.normpath(inputPath)))
     seen_links = set()
     if not os.path.exists(folder_path):
-        return 'Path not found', 404
+        return {'message', 'Path not found'}, 404
     if os.path.isfile(folder_path):
         paths = [{'fs': folder_path, 'n': os.path.basename(folder_path)}]
-    else:
+    elif os.path.isdir(folder_path):
         paths = []
         for root, dirs, files in os.walk(folder_path, followlinks=True):
             for file in files:
@@ -225,6 +225,8 @@ def download_zip(inputPath):
             else:
                 continue
             break
+    else:
+        return {'message': 'Path is not directory or file.'}, 404
 
 
     zfly = zipfly.ZipFly( paths=paths )
@@ -247,7 +249,7 @@ def list_files():
 
     :return: A json with keys 'files' and 'folders'.
     """
-    folder = request.args.get('folder', '')
+    folder = os.path.normpath(request.args.get('folder', ''))
     seen_links = set() # to detect symlink loops.
     file_list = []
     folder_list = []
@@ -277,6 +279,119 @@ def list_files():
             break
 
     return {'files': file_list, 'folders': folder_list}
+
+
+@app.route('/delete', methods=['POST'])
+def delete_item():
+    """
+    Deletes a file/directory
+
+    :return: A json response with a message if the operation was successful or not.
+    """
+    inputPath = os.path.normpath(request.form.get('path',''))
+
+    if not isinstance(inputPath, str) or not inputPath:
+        return {'message': 'Invalid path. Do not delete root.'}, 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER, inputPath))
+
+    if file_path == UPLOAD_FOLDER:
+        return {'message': 'You cannot delete the root directory.'}, 400
+    if not os.path.exists(file_path):
+        return {'message': 'File/folder not found'}, 404
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    elif os.path.isdir(file_path):
+        try:
+            shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Delete error: {e}')
+            return {'message': 'An unexpected error occurred'}, 405
+        
+    return {'message': 'Deleted'}, 200
+
+@app.route('/move', methods=['POST'])
+def move_item():
+    """
+    Move a file/directory
+
+    :return: A json response with a message if the operation was successful or not.
+    """
+    sourcePath = os.path.normpath(request.form.get('sourcePath',''));
+    destinationPath = os.path.normpath(request.form.get('destinationPath'));
+
+    if not isinstance(sourcePath, str) or not sourcePath:
+        return {'message': 'Invalid path'}, 400
+    if not isinstance(destinationPath, str) or not destinationPath:
+        # assume user wants to move to root folder
+        destinationPath = ''
+
+    sourcePath = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER, sourcePath))
+    destinationPath = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER, destinationPath))
+
+    if not os.path.exists(sourcePath):
+        return {'message': 'File/folder not found'}, 404
+
+    try:
+        shutil.move(sourcePath, destinationPath)
+        return {'message': 'Moved'}, 200
+    except FileNotFoundError:
+        return {'message': 'Path does not exist. Check if you enter the correct path'}, 400
+    except Exception as e:
+        print(f'Move error: {e}')
+        return {'message': 'An unexpected error occurred'}, 405
+
+
+@app.route('/newfile', methods=['POST'])
+def new_file():
+    """
+    Create a new file
+
+    :return: A json response with a message if the operation was successful or not.
+    """
+    inputFilename = os.path.normpath(request.form.get('filename',''));
+
+    if (not isinstance(inputFilename, str) or not inputFilename):
+        return {'message': 'Invalid file name'}, 400
+
+    filename = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER, inputFilename))
+    directory = secure_folderpath(UPLOAD_FOLDER,os.path.dirname(filename))
+
+    try:
+        os.makedirs(directory,exist_ok=True)
+        with open(filename, 'x') as file:
+            pass
+        return {'message': 'File created'}, 200
+    except FileExistsError:
+        return {'message': 'The path you gave already exists.'}, 400
+    except Exception as e:
+        print(f"New file error: {e}")
+        return {'message': "An unexpected error occurred"}, 405
+
+
+@app.route('/newfolder', methods=['POST'])
+def new_folder():
+    """
+    Create a new directory
+
+    :return: A json response with a message if the operation was successful or not.
+    """
+    inputFoldername = os.path.normpath(request.form.get('foldername',''));
+
+    if (not isinstance(inputFoldername, str) or not inputFoldername):
+        return {'message': 'Invalid folder name'}, 400
+
+    foldername = os.path.join(UPLOAD_FOLDER, secure_folderpath(UPLOAD_FOLDER, inputFoldername))
+
+    try:
+        os.makedirs(foldername,exist_ok=True)
+        return {'message': 'Folder created'}, 200
+    except FileExistsError:
+        return {'message': 'The path you gave already exists.'}, 400
+    except Exception as e:
+        print(f"New folder error: {e}")
+        return {'message': "An unexpected error occurred"}, 405
+
 
 
 # setup some global variables and configurations for ease of use.

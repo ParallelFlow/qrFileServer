@@ -1,8 +1,9 @@
 # qrFileServer
-Easily create a webserver with flask to serve files and directories over http to transfer files by a scanning a qrcode directly from the terminal.
+Set up a simple web file manager using python flask to serve files and directories over your local network directly from your terminal. 
 
 ## Features
 - Allows you to send and receive files.
+- Contains basic file management features like moving, deleting, and creating files and directories, along with a basic text editor.
 - Resumable uploads
 - Download directories by zipping them on the fly
 
@@ -35,14 +36,35 @@ The bash script `start-qrFileServer.sh` is what you want to use to run this prog
 ./start-qrFileServer.sh
 Usage: ./start-qrFileServer.sh path [--readonly] [path2 ... pathN]
 ```
-Transfer as many directories and files as you like like this
+Transfer as many directories and files as you like.
 ```bash
 ./start-qrFileServer.sh path/to/somewhere path/to/myfile.txt
 ```
-Additionally add the --readonly option to deny uploads.
+Additionally add the --readonly option to only allow downloads.
 ```bash
 ./start-qrFileServer.sh path/to/somewhere path/to/myfile.txt --readonly
 ```
+
+## How it works
+
+Currently, this `start-qrFileServer.sh` bash script takes in file/directory path arguments and the optional '--readonly' argument. It stores the file/directory path arguments in a enviorment variable which is a base64 encoded string seperated by pipe character. It runs gunicorn with the config file `qrFileServerConfig.py` and the `app.py` which contains the flask webserver fetches the environment variable and the configurations from `qrFileServerConfig.py`.
+
+By default, the example config will attempt to fetch a local ip address and gunicorn will try to bind to it on port 8000. By default, the webserver is not encrypted and needs to be manually configured.
+
+In the default config, the authentication is done by checking 3 places
+ - A token in the url query parameter
+ - Cookies with the token parameter
+ - HTTP Auth
+
+The url query parameter is the easiest way to authenticate and it is meant to be randomly generated on each run.
+
+
+## TODOS
+
+- Clean up code, more consistant variable names. Maybe rewrite to use more classes and objects.
+- Replace bash script for a more cross platform solution.
+- Configure with command line arguments in addition to having a config file.
+
 
 ## Related
 https://github.com/claudiodangelis/qrcp
