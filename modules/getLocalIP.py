@@ -1,15 +1,31 @@
-import socket
-#credits to "fatal_error" at https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib/28950776#28950776
-# this should allow me to get the local ip address without external libs.
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
-    try:
-        # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
+import socket, psutil
+
+def get_ipv4_addr():
+    """
+    # Get all ipv4 network addresses from all network interface
+
+    :return: A list of ipv4 network addresses.
+    """
+    addresses = []
+    for interface, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == socket.AF_INET:
+                addresses.append(addr.address)
+    return addresses
+
+
+
+def get_ipv6_addr():
+    """
+    # Get all ipv6 network addresses from all network interface
+
+    :return: A list of ipv6 network addresses.
+    """
+    addresses = []
+    for interface, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == socket.AF_INET6:
+                addresses.append(addr.address)
+    return addresses
+
+

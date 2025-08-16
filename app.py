@@ -113,7 +113,7 @@ def upload_file():
     if not isinstance(folder, str):
         return {'message': 'Invalid folder'}, 400
 
-    if 'file' not in request.files and not request.file.name:
+    if 'file' not in request.files:
         return {'message': 'No file part'}, 400
     file = request.files['file']
 
@@ -393,15 +393,14 @@ def new_folder():
         return {'message': "An unexpected error occurred"}, 405
 
 
-
 # setup some global variables and configurations for ease of use.
 TOKEN = qrFileServerConfig.token
-USERS = qrFileServerConfig.users
-HOST = qrFileServerConfig.host
+USERS = qrFileServerConfig.users 
+URLS = qrFileServerConfig.urls 
 TEMPDIR = tempfile.mkdtemp()
 UPLOAD_FOLDER = setup_upload_paths(os.getenv('QR_FILE_SERVER_INPUT'))
-READONLY = False if os.getenv('QR_FILE_SERVER_READONLY') == 'false' else True
-EXPECTED_CHUNK_SIZE = 1000*500 # if I want to change this, the js file needs changing also
+READONLY = qrFileServerConfig.readonly
+EXPECTED_CHUNK_SIZE = 1000*500 # if you want to change this, the js file needs changing also
 
 #flask writes temp files to disk when upload size are over 500KiB so this should cap it.
 app.config['MAX_CONTENT_LENGTH'] = 1024*500 
@@ -412,5 +411,6 @@ atexit.register(cleanup)
 
 print(f"Readonly: {READONLY}")
 print(f"Upload folder set to {UPLOAD_FOLDER}")
-print(f"Accessible on {HOST}")
-print(generate_unicode_qr(HOST))
+for url in URLS:
+    print(f"Accessible on {url}")
+    print(generate_unicode_qr(url))

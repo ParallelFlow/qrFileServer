@@ -1,5 +1,6 @@
 from modules.createToken import generate_token
-from modules.getLocalIP import get_ip
+from modules.getLocalIP import get_ipv4_addr
+from modules.getLocalIP import get_ipv6_addr
 import os
 # This is a config file for both gunicorn and app.py 
 # For documentation for gunicorn follow this below
@@ -7,12 +8,15 @@ import os
 # Run this to start it: gunicorn -c gunicornConfig.py app:app
 
 
-# This will attempt to get your local ip to bind to it.
-# Change this if it doesn't work right or if you want to add your own domain
-ip = get_ip()
+# This will use get_ipv4_addr() to get a list of ipv4 addresses.
+# You can also use get_ipv6_addr() for ipv6.
+# You can also change it to use your custom domain.
+# Note that gunicorn and my program only reads the bind variable.
+# The addresses and port variable is only for readability.
+addresses = get_ipv4_addr()
 port = '8000'
 
-bind = f'{ip}:{port}'
+bind = [f"{ip}:{port}" for ip in addresses]
 
 # Enable https by adding your tls certificates here.
 #certfile = 'path/to/tls/certs.pem'
@@ -55,8 +59,12 @@ users = {
 
 # Configure this to customize the qrcode to display
 # If using certfile and keyfile, make sure to add a 's' in front of http
-host = f'http://{bind}/?token={token}'
+if 'certfile' in globals() and 'keyfile' in globals():
+    urls = [f'https://{addr}/?token={token}' for addr in bind]
+else:
+    urls = [f'http://{addr}/?token={token}' for addr in bind]
 
-
+# Configure readonly depending on the enviorment variable
+readonly = False if os.getenv('QR_FILE_SERVER_READONLY') == 'false' else True
 
 
