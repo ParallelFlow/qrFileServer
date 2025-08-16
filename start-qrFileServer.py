@@ -29,7 +29,7 @@ def main():
 
     if os.name == 'nt':  # windows
         #gunicorn_path = os.path.join(venv_name, 'Scripts', 'gunicorn.exe')
-        print("Currently this project depends on gunicorn which doesn't support windows, try windows wsgi instead.")
+        print("Currently this project depends on gunicorn which doesn't support windows, try windows wsl instead.")
         sys.exit(1)
     else:  # unix systems
         gunicorn_path = os.path.join(venv_name, 'bin', 'gunicorn')
