@@ -1,0 +1,51 @@
+from modules.getLocalIP import get_ipv4_addr
+from modules.getLocalIP import get_ipv6_addr
+import os
+# For gunicorn documentation, refer to this below
+# https://docs.gunicorn.org/en/stable/settings.html
+
+# This will use get_ipv4_addr() to get a list of bindable ipv4 addresses.
+# You can also use get_ipv6_addr() for bindable ipv6 addresses.
+# You can also change it to use your custom domain.
+# Note that gunicorn and qrFileServer only utilize the 'bind' variable.
+# The 'addresses' and 'port' variable are for readability.
+port = '8000'
+addresses = get_ipv4_addr(port)
+
+
+# By default, use the environment variable. 
+if 'QR_FILE_SERVER_BIND' in os.environ:
+    bind = os.getenv('QR_FILE_SERVER_BIND').split(',')
+else:
+    bind = [f"{ip}:{port}" for ip in addresses]
+
+# Enable https by uncommenting and adding your tls certificates here.
+#certfile = 'path/to/tls/certs.pem'
+#keyfile = 'path/to/tls/key.pem'
+
+# You can increase gunicorn verbosity here.
+#loglevel = 'debug'
+
+# The number of worker and threads for gunicorn.
+# Having multiple workers may not play well with authentication
+# A few threads should suffice as long as you don't get
+# flooded with thousands of simultaneous requests.
+worker_class = 'gthread'
+workers = 1
+threads = 16
+
+# The timeout for workers.
+timeout = 30
+
+# This function below passes some of the gunicorn config to qrFileServerConfig config
+def on_starting(server):
+    # Share the bind variable to qrFileServerConfig.py using environment variable. 
+    if not 'QR_FILE_SERVER_BIND' in os.environ:
+        os.environ['QR_FILE_SERVER_BIND'] = ','.join(bind)
+    
+    # Indicate if tls is enabled
+    if 'QR_FILE_SERVER_SECURE' in os.environ and os.environ['QR_FILE_SERVER_SECURE'] == 'false':
+        if 'certfile' in globals() and 'keyfile' in globals():
+            os.environ['QR_FILE_SERVER_SECURE'] = 'true'
+        else:
+            os.environ['QR_FILE_SERVER_SECURE'] = 'false'

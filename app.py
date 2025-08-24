@@ -396,7 +396,7 @@ def new_folder():
 # setup some global variables and configurations for ease of use.
 TOKEN = qrFileServerConfig.token
 USERS = qrFileServerConfig.users 
-URLS = qrFileServerConfig.urls 
+URLS = qrFileServerConfig.urls
 TEMPDIR = tempfile.mkdtemp()
 UPLOAD_FOLDER = setup_upload_paths(os.getenv('QR_FILE_SERVER_INPUT'))
 READONLY = qrFileServerConfig.readonly

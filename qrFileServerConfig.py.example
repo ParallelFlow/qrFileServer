@@ -1,70 +1,41 @@
 from modules.createToken import generate_token
-from modules.getLocalIP import get_ipv4_addr
-from modules.getLocalIP import get_ipv6_addr
 import os
-# This is a config file for both gunicorn and app.py 
-# For documentation for gunicorn follow this below
-# https://docs.gunicorn.org/en/stable/settings.html
-# Run this to start it: gunicorn -c gunicornConfig.py app:app
-
-
-# This will use get_ipv4_addr() to get a list of ipv4 addresses.
-# You can also use get_ipv6_addr() for ipv6.
-# You can also change it to use your custom domain.
-# Note that gunicorn and my program only reads the bind variable.
-# The addresses and port variable is only for readability.
-addresses = get_ipv4_addr()
-port = '8000'
-
-bind = [f"{ip}:{port}" for ip in addresses]
-
-# Enable https by adding your tls certificates here.
-#certfile = 'path/to/tls/certs.pem'
-#keyfile = 'path/to/tls/key.pem'
-
-# You can increase gunicorn verbosity here.
-#loglevel = 'debug'
-
-# The number of worker and threads for gunicorn.
-# Having multiple workers may not play well with authentication
-# A few threads should suffice as long as you don't get
-# flooded with thousands of simultaneous requests.
-worker_class = 'gthread'
-workers = 1
-threads = 16
-
-# The timeout for workers.
-timeout = 30
-
-
-
+# This is a config file for both app.py (aka qrFileServer).
 # qrFileServer configs
 
 # Authentication config
 # 
-# Authentication is done by checking 3 places
-#  - A token in the url query parameter
-#  - Cookies with the token parameter
+# Authentication is done by checking 2 places
+#  - In the url query string called token or the token variable in cookies.
 #  - HTTP Auth
 #
-#  The url query parameter is the easiest way to authenticate and it is meant
-#  to be randomly generated on each run.
-#
-# Generate a 16 character alphanumeric token for file access.
-token = generate_token(16)
+# The URL query token is the simplest method and should be randomly generated
+# for each session unless an environment variable is set.
+
+# By default, use the environment variable. 
+if 'QR_FILE_SERVER_TOKEN' in os.environ:
+    token = os.getenv('QR_FILE_SERVER_TOKEN')
+else:
+    # Generate a 16 character alphanumeric token for file access.
+    token = generate_token(16)
+
 # Users and password for http auth is stored in a dictionary
 users = {
     "token": token,
 }
 
-# Configure this to customize the qrcode to display
-# If using certfile and keyfile, make sure to add a 's' in front of http
-if 'certfile' in globals() and 'keyfile' in globals():
+
+# Configure this to customize the qrcode to display. The default should fetch
+# what gunicorn binded to and generate urls based on that.
+bind = os.getenv('QR_FILE_SERVER_BIND').split(',')
+if os.getenv('QR_FILE_SERVER_SECURE') == 'true':
     urls = [f'https://{addr}/?token={token}' for addr in bind]
 else:
     urls = [f'http://{addr}/?token={token}' for addr in bind]
 
-# Configure readonly depending on the enviorment variable
+
+# Make qrFileServer download only with readonly. By default 
+# this will pass the environment variable to readonly.
 readonly = False if os.getenv('QR_FILE_SERVER_READONLY') == 'false' else True
 
 
