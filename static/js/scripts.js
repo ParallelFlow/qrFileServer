@@ -139,7 +139,7 @@ function uploadFileRecursive(fileArray, folder, resume) {
         formData.append('folder', folder);
         formData.append('chunk', currentChunk);
         formData.append('fileSize', file.size);
-        formData.append('resume', resume.checked);
+        formData.append('resume', resume);
         
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `/upload?${token}`, true);

@@ -10,8 +10,7 @@ def parse_gunicorn_bind_args(gunicorn_args):
     :param gunicorn_args: An array of args.
     """
     gunicorn_parser = argparse.ArgumentParser(add_help=False)
-    gunicorn_parser.add_argument('--bind', type=str, dest='bind')
-    gunicorn_parser.add_argument('-b', type=str, dest='bind')
+    gunicorn_parser.add_argument('--bind', '-b', type=str, dest='bind')
     gunicorn_parser.add_argument('--certfile', type=str, dest='certfile')
     gunicorn_parser.add_argument('--keyfile', type=str, dest='keyfile')
     args, unknown_args = gunicorn_parser.parse_known_args(gunicorn_args)
@@ -33,11 +32,11 @@ def parse_gunicorn_bind_args(gunicorn_args):
         os.environ['QR_FILE_SERVER_SECURE'] = 'false'
 
 def main():
-    parser = argparse.ArgumentParser(description='Process file paths.')
-    parser.add_argument('paths', nargs='+', help='List of file paths')
-    parser.add_argument('--readonly', action='store_true', help='Set read-only mode')
-    parser.add_argument('--token', type=str, help='Enter custom token/password for authentication')
-    parser.add_argument('--gunicorn-args', type=str, help='Add custom gunicorn arguments')
+    parser = argparse.ArgumentParser(description='Launch a http server to send and receive files and directories.')
+    parser.add_argument('paths', nargs='+', help='One or more file or directory path to serve.')
+    parser.add_argument('--readonly', '-r', action='store_true', help='Set read-only mode to disallow modifications.')
+    parser.add_argument('--token', '-t', type=str, help='Enter custom token/password for authentication')
+    parser.add_argument('--gunicorn-args', '-g', type=str, help='Enter custom gunicorn arguments')
 
     args = parser.parse_args()
 
