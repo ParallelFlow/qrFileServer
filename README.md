@@ -8,6 +8,7 @@ Set up a simple web file manager using python flask to serve files and directori
 - Download directories by zipping them on the fly
 
 # Demo
+https://github.com/user-attachments/assets/9bbfd20b-6cca-4a8a-9f76-356696606fb3
 
 
 ## Install
